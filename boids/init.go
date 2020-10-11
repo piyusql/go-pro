@@ -1,4 +1,4 @@
-package main
+package boids
 
 import (
 	"image/color"
@@ -44,7 +44,7 @@ func update(screen *ebiten.Image) error {
 	return nil
 }
 
-func main() {
+func Init() {
 	for i, row := range boidMap {
 		for j := range row {
 			boidMap[i][j] = -1
