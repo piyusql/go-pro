@@ -3,46 +3,57 @@ package main
 import (
 	"image/color"
 	"log"
+	"sync"
 
 	"github.com/hajimehoshi/ebiten"
 )
 
 const (
 	screenWidth, screenHeight = 640, 360
-	boidCount                 = 500
+	boidCount                 = 1024
+	viewRadius                = 13
+	slowFactor                = 0.125
 )
 
 var (
-	green  = color.RGBA{R: 10, G: 255, B: 50, A: 255}
-	red    = color.RGBA{R: 255, G: 10, B: 50, A: 255}
-	colors = [2]color.RGBA{green, red}
-	boids  [boidCount]*Boid
+	skycolour  = color.RGBA{R: 185, G: 235, B: 255, A: 255}
+	birdcolour = color.RGBA{R: 1, G: 4, B: 16, A: 255}
+	boids      [boidCount]*Boid
+	// this will store the boid id at the screen position
+	boidMap [screenWidth + 1][screenHeight + 1]int
+	rWLock  = sync.RWMutex{}
 )
 
 func update(screen *ebiten.Image) error {
-	/* creating a bird in the followig position
+	/* creating a bird in the followig pixel position
 		*
 	   * *
 		*
 		*
 	*/
 	if !ebiten.IsDrawingSkipped() {
-		for i, boid := range boids {
-			screen.Set(int(boid.position.x+1), int(boid.position.y), colors[i%2])
-			screen.Set(int(boid.position.x-1), int(boid.position.y), colors[i%2])
-			screen.Set(int(boid.position.x), int(boid.position.y-1), colors[i%2])
-			screen.Set(int(boid.position.x), int(boid.position.y+1), colors[i%2])
-			screen.Set(int(boid.position.x), int(boid.position.y+2), colors[i%2])
+		screen.Fill(skycolour)
+		for _, boid := range boids {
+			screen.Set(int(boid.position.x-1), int(boid.position.y), birdcolour)
+			screen.Set(int(boid.position.x+1), int(boid.position.y), birdcolour)
+			screen.Set(int(boid.position.x), int(boid.position.y-1), birdcolour)
+			screen.Set(int(boid.position.x), int(boid.position.y+1), birdcolour)
+			screen.Set(int(boid.position.x), int(boid.position.y+2), birdcolour)
 		}
 	}
 	return nil
 }
 
 func main() {
+	for i, row := range boidMap {
+		for j := range row {
+			boidMap[i][j] = -1
+		}
+	}
 	for i := 0; i < boidCount; i++ {
 		createBoid(i)
 	}
-	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "Birds waving !!!"); err != nil {
+	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "Flocking birds, https://github.com/piyusgupta/go-pro !!!"); err != nil {
 		log.Fatal(err)
 	}
 }
